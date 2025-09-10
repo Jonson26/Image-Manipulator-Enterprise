@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Image Manipulator Enterprise Output Page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <table>
+        <tr>
+            <td colspan="2">Image Conversion Output Page</td>
+        </tr>
+        <tr>
+            <td colspan="2" class="text-danger" th:if="${errorMessage}" th:text="${errorMessage}"></td>
+            <td colspan="2" class="text-success" th:if="${successMessage}" th:text="${successMessage}"></td>
+        </tr>
+        <tr>
+            <td><img th:src="${imageURI}"/></td>
+            <td><a th:download="${newImageName}" th:href="${imageURI}">Download</a>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

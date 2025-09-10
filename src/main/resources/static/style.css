@@ -1,0 +1,5 @@
+table, th, td {
+    border: 1px solid;
+    border-spacing: 0px;
+    text-align: center;
+}
