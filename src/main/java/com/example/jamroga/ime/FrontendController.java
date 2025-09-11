@@ -1,6 +1,7 @@
 package com.example.jamroga.ime;
 
 import com.example.jamroga.ime.api.BlurSimpleAverage;
+import com.example.jamroga.ime.api.ImageManipulator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,9 @@ import java.util.Base64;
 public class FrontendController {
     @Autowired
     BlurSimpleAverage blur;
+    
+    @Autowired
+    ImageManipulator magentaDeepFry;
 
     String tmpdir;
 
@@ -49,7 +53,10 @@ public class FrontendController {
     }
 
     @PostMapping("/uploadFile")
-    public String uploadFile(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes)
+    public String uploadFile(@RequestParam("file") MultipartFile file,
+                             @RequestParam("effect") String effect,
+                             @RequestParam("options") String options,
+                             RedirectAttributes redirectAttributes)
         throws IOException {
         if(file.isEmpty()) {
             log.atWarn().log("No file uploaded");
@@ -63,12 +70,16 @@ public class FrontendController {
         fileName += file.getOriginalFilename();
         redirectAttributes.addFlashAttribute("successMessage", "File upload successfully, uploaded file name: " + fileName);
         log.atInfo().log("File upload successfully, uploaded file name: " + file.getOriginalFilename());
-        return "redirect:/output?fileName=" + fileName + "&fileFormat=" + getFileExtension(fileName);
+        log.atInfo().log("Effect is: " + effect);
+        log.atInfo().log("Option is: " + options);
+        return "redirect:/output?fileName=" + fileName + "&effect=" + effect + "&options=" + options;
     }
     
     @GetMapping("/output")
-    public String output(@RequestParam(name="fileName", required=true, defaultValue="") String fileName, 
-                         @RequestParam(name="fileFormat", required=true, defaultValue="png") String format, Model model) {
+    public String output(@RequestParam(name="fileName", required=true, defaultValue="") String fileName,
+                         @RequestParam(name="effect", required=true, defaultValue="blur") String effect,
+                         @RequestParam(name="options", required=true, defaultValue="multi") String options,
+                         Model model) {
         try{
             URL url = FrontendController.class.getClassLoader().getResource("static/moka.png");
             
@@ -78,32 +89,44 @@ public class FrontendController {
             assert url != null;
             
             BufferedImage img = ImageIO.read(url);
-            img = blur.processImage(img);
-            String base64img = "data:image/png;base64, "+imgToBase64String(img, format);
+
+            img = switch (effect) {
+                case "blur" -> switch (options) {
+                    case "multi" -> blur.processImageInParallel(img);
+                    case "single" -> blur.processImage(img);
+                    default -> img;
+                };
+                case "magenta" -> switch (options) {
+                    case "multi" -> magentaDeepFry.processImageInParallel(img);
+                    case "single" -> magentaDeepFry.processImage(img);
+                    default -> img;
+                };
+                default -> img;
+            };
+            String base64img = "data:image/png;base64, "+imgToBase64String(img);
             model.addAttribute("imageURI", base64img);
-            model.addAttribute("newImageName", "blurred-"+Paths.get(url.toURI()).getFileName());
+            model.addAttribute("newImageName", "blurred-"+changeExtension(
+                Paths.get(url.toURI()).getFileName().toString()));
         } catch (IOException | URISyntaxException e) {
             log.atWarn().log(e.toString());
         }
         return "output";
     }
 
-    private static String imgToBase64String(final RenderedImage img, final String formatName) {
+    private static String imgToBase64String(final RenderedImage img) {
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         try {
-            ImageIO.write(img, formatName, os);
+            ImageIO.write(img, "png", os);
             return Base64.getEncoder().encodeToString(os.toByteArray());
         } catch (final IOException ioe) {
             throw new UncheckedIOException(ioe);
         }
     }
 
-    private static String getFileExtension(String fileName) {
-        int lastIndexOf = fileName.lastIndexOf(".");
-        if (lastIndexOf == -1) {
-            return ""; // empty extension
-        }
-        return fileName.substring(lastIndexOf + 1);
+    private static String changeExtension(String f) {
+        int i = f.lastIndexOf('.');
+        String name = f.substring(0,i);
+        return name + "png";
     }
 }
