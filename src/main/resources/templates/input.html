@@ -3,15 +3,24 @@
 <head>
     <title>Image Manipulator Enterprise Input Paga</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <form method="POST" enctype="multipart/form-data" action="/uploadFile">
-        <div class="form-group">
-            <label for="exampleFormControlFile1">File to upload</label>
-            <input type="file" class="form-control-file" id="file" name="file" >
-        </div>
-        <button type="submit" class="btn btn-primary">Upload</button>
-    </form>
+    <table>
+        <tr>
+            <td colspan="2">Image Conversion Input Page</td>
+        </tr>
+        <tr>
+            <form method="POST" enctype="multipart/form-data" action="/uploadFile">
+                <td>
+                    <label>File to upload</label>
+                    <input type="file" class="form-control-file" id="file" name="file" >
+                </td>
+                <td>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </td>
+            </form>
+        </tr>
+    </table>
 </body>
 </html>

@@ -1,6 +1,8 @@
-package com.example.Jamroga.IME;
+package com.example.jamroga.ime;
 
-import com.example.Jamroga.IME.API.BlurSimpleAverage;
+import com.example.jamroga.ime.api.BlurSimpleAverage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,9 +16,9 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,17 +32,19 @@ public class FrontendController {
 
     String tmpdir;
 
+    private static final Logger log = LoggerFactory.getLogger(FrontendController.class);
+
     public FrontendController() {
         try {
-            tmpdir = Files.createTempDirectory("tmpDirPrefix").toFile().getAbsolutePath();
-            System.out.println(tmpdir);
+            tmpdir = Files.createTempDirectory("IME_TMP_DIR-").toFile().getAbsolutePath();
+            log.atInfo().log("Temporary directory created at "+tmpdir);
         } catch (IOException e) {
             tmpdir = null;
         }
     }
 
     @GetMapping("/input")
-    public String input(@RequestParam(name="name", required=false, defaultValue="World") String name, Model model) {
+    public String input(Model model) {
         return "input";
     }
 
@@ -48,15 +52,18 @@ public class FrontendController {
     public String uploadFile(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes)
         throws IOException {
         if(file.isEmpty()) {
+            log.atWarn().log("No file uploaded");
             redirectAttributes.addFlashAttribute("errorMessage", "Please select a file to upload.");
             return "redirect:/output";
         }
 
-        System.out.println(tmpdir);
         Path path = Paths.get(tmpdir, file.getOriginalFilename());
         Files.write(path, file.getBytes());
-        redirectAttributes.addFlashAttribute("successMessage", "File upload successfully, uploaded file name: " + file.getOriginalFilename());
-        return "redirect:/output?fileName=" + file.getOriginalFilename() + "&fileFormat=" + getFileExtension(file.getOriginalFilename());
+        String fileName = "";
+        fileName += file.getOriginalFilename();
+        redirectAttributes.addFlashAttribute("successMessage", "File upload successfully, uploaded file name: " + fileName);
+        log.atInfo().log("File upload successfully, uploaded file name: " + file.getOriginalFilename());
+        return "redirect:/output?fileName=" + fileName + "&fileFormat=" + getFileExtension(fileName);
     }
     
     @GetMapping("/output")
@@ -75,8 +82,8 @@ public class FrontendController {
             String base64img = "data:image/png;base64, "+imgToBase64String(img, format);
             model.addAttribute("imageURI", base64img);
             model.addAttribute("newImageName", "blurred-"+Paths.get(url.toURI()).getFileName());
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException | URISyntaxException e) {
+            log.atWarn().log(e.toString());
         }
         return "output";
     }

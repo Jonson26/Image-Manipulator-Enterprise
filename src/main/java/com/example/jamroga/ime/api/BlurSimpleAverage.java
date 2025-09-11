@@ -1,4 +1,4 @@
-package com.example.Jamroga.IME.API;
+package com.example.jamroga.ime.api;
 
 import org.springframework.stereotype.Component;
 
@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage;
 
 @Component("blur")
 public class BlurSimpleAverage extends ImageManipulator{
-    public int INTENSITY = 4;
+    private int intensity = 4;
     
     @Override
     public Color processPixel(int x, int y, BufferedImage image) {
@@ -18,8 +18,8 @@ public class BlurSimpleAverage extends ImageManipulator{
         
         int counter = 0;
         
-        for(int i=-INTENSITY; i<=INTENSITY; i++){
-            for(int j=-INTENSITY; j<=INTENSITY; j++){
+        for(int i=-intensity; i<=intensity; i++){
+            for(int j=-intensity; j<=intensity; j++){
                 if(isWithinBounds(x+i, y+j, image)){
                     int argb = image.getRGB(x+i, y+j);
                     
@@ -41,7 +41,15 @@ public class BlurSimpleAverage extends ImageManipulator{
         return new Color(red, green, blue, alpha);
     }
     
-    private boolean isWithinBounds(int x, int y, BufferedImage image) {
-        return x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight();
+    @Override
+    public int setParameter(String parameter, String value){
+        parameter = parameter.toLowerCase();
+        switch (parameter){
+            case "intensity":
+                intensity = Integer.parseInt(value);
+                return 0;
+            default:
+                return -1;
+        }
     }
 }
