@@ -4,18 +4,19 @@
     <title>Image Manipulator Enterprise Output Page</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" th:text="${script}"></script>
 </head>
 <body>
     <table>
         <tr>
-            <td colspan="2">Image Conversion Output Page</td>
+            <th colspan="2">Image Conversion Output Page</th>
         </tr>
         <tr>
-            <td colspan="2" class="text-danger" th:if="${errorMessage}" th:text="${errorMessage}"></td>
-            <td colspan="2" class="text-success" th:if="${successMessage}" th:text="${successMessage}"></td>
+            <td class="text-filename" th:text="${fileName}"></td>
+            <td class="text-success" th:text="${finished}"></td>
         </tr>
         <tr>
-            <td><img th:src="${imageURI}"/></td>
+            <td><img alt="Converted Image" th:src="${imageURI}"/></td>
             <td><a th:download="${newImageName}" th:href="${imageURI}">Download</a></td>
         </tr>
     </table>

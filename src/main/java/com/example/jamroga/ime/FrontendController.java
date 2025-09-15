@@ -1,6 +1,7 @@
 package com.example.jamroga.ime;
 
 import com.example.jamroga.ime.api.ManipulatorService;
+import com.example.jamroga.ime.api.OutputContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -49,12 +48,10 @@ public class FrontendController {
     @PostMapping("/uploadFile")
     public String uploadFile(@RequestParam("file") MultipartFile file,
                              @RequestParam("effect") String effect,
-                             @RequestParam("options") String options,
-                             RedirectAttributes redirectAttributes)
+                             @RequestParam("options") String options)
         throws IOException {
         if(file.isEmpty()) {
             log.atWarn().log("No file uploaded");
-            redirectAttributes.addFlashAttribute("errorMessage", "Please select a file to upload.");
             return "redirect:/output";
         }
 
@@ -62,24 +59,32 @@ public class FrontendController {
         Files.write(path, file.getBytes());
         String fileName = "";
         fileName += file.getOriginalFilename();
-        redirectAttributes.addFlashAttribute("successMessage", "File upload successfully, uploaded file name: " + fileName);
         log.atInfo().log("File upload successfully, uploaded file name: " + file.getOriginalFilename());
 
-        int index = manipulatorService.processImage(Path.of(tmpdir+"/"+fileName).toUri().toURL(), effect, options);
+        int index = manipulatorService.processImage(tmpdir, fileName, effect, options);
         
-        return "redirect:/output?fileName=" + fileName + "&cid=" + index;
+        return "redirect:/output?cid=" + index;
     }
     
     @GetMapping("/output")
-    public String output(@RequestParam(name="fileName", defaultValue="moka_mini.png") String fileName,
-                         @RequestParam(name="cid", defaultValue="0") String index,
+    public String output(@RequestParam(name="cid", defaultValue="0") String index,
                          Model model) {
         
-        BufferedImage img = manipulatorService.getConvertedImage(Integer.parseInt(index));
+        OutputContainer out = manipulatorService.getConvertedImage(Integer.parseInt(index));
 
-        String base64img = "data:image/png;base64, "+imgToBase64String(img);
+        String base64img = "data:image/png;base64, "+imgToBase64String(out.getImage());
+        model.addAttribute("fileName", out.getFilename());
+        model.addAttribute("finished", statusString(out.isFinished()));
+        if(!out.isFinished()) {
+            model.addAttribute("script", 
+                """
+                setTimeout(function(){
+                    location.reload();
+                }, 1000);
+                """);
+        }
         model.addAttribute("imageURI", base64img);
-        model.addAttribute("newImageName", "blurred-"+changeExtension(fileName));
+        model.addAttribute("newImageName", "blurred-"+changeExtension(out.getFilename()));
         return "output";
     }
 
@@ -98,5 +103,13 @@ public class FrontendController {
         int i = f.lastIndexOf('.');
         String name = f.substring(0,i);
         return name + "png";
+    }
+    
+    private static String statusString(boolean status){
+        if(status){
+            return "\uD83D\uDFE2";
+        }else{
+            return "\uD83D\uDD34";
+        }
     }
 }

@@ -20,8 +20,10 @@ public class ImageManipulator{
         return new Color((image.getRGB(x, y)+ Color.MAGENTA.getRGB())/2);
     }
     
-    public BufferedImage processImage(BufferedImage image){
-        BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+    public OutputContainer processImage(BufferedImage image, String filename){
+        OutputContainer output = new OutputContainer(
+            new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB), 
+            filename);
         
         Thread t = new Thread(() -> {
             log.atInfo().log(
@@ -29,9 +31,11 @@ public class ImageManipulator{
             
             for (int x = 0; x < image.getWidth(); x++) {
                 for (int y = 0; y < image.getHeight(); y++) {
-                    output.setRGB(x, y, processPixel(x, y, image).getRGB());
+                    output.getImage().setRGB(x, y, processPixel(x, y, image).getRGB());
                 }
             }
+            
+            output.finish();
         });
         
         t.start();
@@ -39,27 +43,31 @@ public class ImageManipulator{
         return output;
     }
 
-    public BufferedImage processImageWithExecutorService(BufferedImage image){
+    public OutputContainer processImageWithExecutorService(BufferedImage image, String filename){
+        OutputContainer output = new OutputContainer(
+            new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB),
+            filename);
+        
         log.atInfo().log(
             String.format("Processing %d by %d image with ExecutorService", image.getWidth(), image.getHeight()));
-        BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
         
         Thread t = new Thread(() -> {
             try {
-                ExecutorService EXEC = Executors.newCachedThreadPool();
+                ExecutorService executorService = Executors.newCachedThreadPool();
                 List<Callable<Integer>> tasks = new ArrayList<>();
                 for (int x = 0; x < image.getWidth(); x++) {
                     for (int y = 0; y < image.getHeight(); y++) {
                         final int finalX = x;
                         final int finalY = y;
                         Callable<Integer> c = () -> {
-                            output.setRGB(finalX, finalY, processPixel(finalX, finalY, image).getRGB());
+                            output.getImage().setRGB(finalX, finalY, processPixel(finalX, finalY, image).getRGB());
                             return 0;
                         };
                         tasks.add(c);
                     }
                 }
-                EXEC.invokeAll(tasks);
+                executorService.invokeAll(tasks);
+                output.finish();
             } catch(Exception e) {
                 log.atError().log(e.getMessage());
             }
@@ -70,10 +78,12 @@ public class ImageManipulator{
         return output;
     }
 
-    public BufferedImage processImageWithThreads(BufferedImage image){
+    public OutputContainer processImageWithThreads(BufferedImage image, String filename){
+        OutputContainer output = new OutputContainer(
+            new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB),
+            filename);
         log.atInfo().log(
             String.format("Processing %d by %d image with multithreading", image.getWidth(), image.getHeight()));
-        BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
         Thread t = new Thread(() -> {
             try {
@@ -101,10 +111,10 @@ public class ImageManipulator{
     
     private class ImageManipulatorThread extends Thread{
         private final BufferedImage image;
-        private final BufferedImage output;
+        private final OutputContainer output;
         private final int x;
         
-        public ImageManipulatorThread(BufferedImage image, BufferedImage output, int x) {
+        public ImageManipulatorThread(BufferedImage image, OutputContainer output, int x) {
             this.image = image;
             this.output = output;
             this.x = x;
@@ -113,7 +123,11 @@ public class ImageManipulator{
         @Override
         public void run() {
             for (int y=0; y < image.getHeight(); y++) {
-                output.setRGB(x, y, processPixel(x, y, image).getRGB());
+                output.getImage().setRGB(x, y, processPixel(x, y, image).getRGB());
+            }
+            output.incrementProcessCounter();
+            if(output.getProcessCounter()==image.getWidth()){
+                output.finish();
             }
         }
     }

@@ -12,6 +12,7 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 @Component("manipulatorService")
@@ -35,7 +36,7 @@ public class ManipulatorService {
     @Autowired
     MapTo16Colours palette16;
     
-    private final ArrayList<BufferedImage> convertedImages = new ArrayList<>();
+    private final ArrayList<OutputContainer> convertedImages = new ArrayList<>();
 
     private static final Logger log = LoggerFactory.getLogger(ManipulatorService.class);
 
@@ -43,16 +44,17 @@ public class ManipulatorService {
         try {
             URL url = FrontendController.class.getClassLoader().getResource("static/moka_mini.png");
             BufferedImage img = ImageIO.read(url);
-            img = new BlurSimpleAverage().processImageWithExecutorService(img);
-            convertedImages.add(img);
+            OutputContainer out = new BlurSimpleAverage().processImageWithExecutorService(img,"moka_mini.png");
+            convertedImages.add(out);
         } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
 
-    public int processImage(URL url, String effect, String options) {
+    public int processImage(String dir, String filename, String effect, String options) throws IOException {
         int index = 0;
-
+        URL url = Path.of(dir+"/"+filename).toUri().toURL();
+        
         log.atInfo().log("Converting file "+url.getFile());
         log.atInfo().log("Effect is: " + effect);
         log.atInfo().log("Option is: " + options);
@@ -60,40 +62,44 @@ public class ManipulatorService {
         try{
             BufferedImage img = ImageIO.read(url);
 
-            img = switch (effect) {
+            OutputContainer out = switch (effect) {
                 case EFFECT_BLUR -> switch (options) {
-                    case MODE_EXECUTOR -> blur.processImageWithExecutorService(img);
-                    case MODE_THREADS -> blur.processImageWithThreads(img);
-                    case MODE_SINGLE -> blur.processImage(img);
-                    default -> img;
+                    case MODE_EXECUTOR -> blur.processImageWithExecutorService(img, filename);
+                    case MODE_THREADS -> blur.processImageWithThreads(img, filename);
+                    case MODE_SINGLE -> blur.processImage(img, filename);
+                    default -> new OutputContainer(img, filename, true);
                 };
                 case EFFECT_MAGENTA -> switch (options) {
-                    case MODE_EXECUTOR -> magentaDeepFry.processImageWithExecutorService(img);
-                    case MODE_THREADS -> magentaDeepFry.processImageWithThreads(img);
-                    case MODE_SINGLE -> magentaDeepFry.processImage(img);
-                    default -> img;
+                    case MODE_EXECUTOR -> magentaDeepFry.processImageWithExecutorService(img, filename);
+                    case MODE_THREADS -> magentaDeepFry.processImageWithThreads(img, filename);
+                    case MODE_SINGLE -> magentaDeepFry.processImage(img, filename);
+                    default -> new OutputContainer(img, filename, true);
                 };
                 case EFFECT_PALETTE_16 -> switch (options){
-                    case MODE_EXECUTOR -> palette16.processImageWithExecutorService(img);
-                    case MODE_THREADS -> palette16.processImageWithThreads(img);
-                    case MODE_SINGLE -> palette16.processImage(img);
-                    default -> img;
+                    case MODE_EXECUTOR -> palette16.processImageWithExecutorService(img, filename);
+                    case MODE_THREADS -> palette16.processImageWithThreads(img, filename);
+                    case MODE_SINGLE -> palette16.processImage(img, filename);
+                    default -> new OutputContainer(img, filename, true);
                 };
-                case EFFECT_SCALE_DOWN_2X -> scale(img, 0.5);
-                case EFFECT_SCALE_UP_2X -> scale(img, 2);
-                default -> img;
+                case EFFECT_SCALE_DOWN_2X -> new OutputContainer(scale(img, 0.5), filename);
+                case EFFECT_SCALE_UP_2X -> new OutputContainer(scale(img, 2), filename);
+                default -> new OutputContainer(img, filename, true);
             };
 
-            convertedImages.add(img);
-            index = convertedImages.indexOf(img);
+            convertedImages.add(out);
+            index = convertedImages.indexOf(out);
         } catch (IOException e) {
             log.atWarn().log(e.toString());
         }
         return index;
     }
     
-    public BufferedImage getConvertedImage(int index) {
-        return convertedImages.get(index);
+    public OutputContainer getConvertedImage(int index) {
+        if(index>=0 && index<convertedImages.size()) {
+            return convertedImages.get(index);
+        }else{
+            return convertedImages.getFirst();
+        }
     }
 
     private static BufferedImage scale(final BufferedImage before, final double scale) {
