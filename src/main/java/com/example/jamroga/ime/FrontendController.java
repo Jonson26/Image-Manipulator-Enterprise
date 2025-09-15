@@ -1,8 +1,6 @@
 package com.example.jamroga.ime;
 
-import com.example.jamroga.ime.api.BlurSimpleAverage;
-import com.example.jamroga.ime.api.ImageManipulator;
-import com.example.jamroga.ime.api.MapTo16Colours;
+import com.example.jamroga.ime.api.ManipulatorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,34 +18,17 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Base64;
 
 @Controller
 public class FrontendController {
-    public static final String MODE_EXECUTOR = "executor";
-    public static final String MODE_SINGLE = "single";
-    public static final String MODE_THREADS = "threads";
-    public static final String EFFECT_BLUR = "blur";
-    public static final String EFFECT_MAGENTA = "magenta";
-    public static final String EFFECT_PALETTE_16 = "palette16";
-
     @Autowired
-    BlurSimpleAverage blur;
-    
-    @Autowired
-    ImageManipulator magentaDeepFry;
-    
-    @Autowired
-    MapTo16Colours palette16;
+    ManipulatorService manipulatorService;
 
     private String tmpdir;
-    
-    private final ArrayList<BufferedImage> convertedImages = new ArrayList<>();
 
     private static final Logger log = LoggerFactory.getLogger(FrontendController.class);
 
@@ -55,11 +36,6 @@ public class FrontendController {
         try {
             tmpdir = Files.createTempDirectory("IME_TMP_DIR-").toFile().getAbsolutePath();
             log.atInfo().log("Temporary directory created at "+tmpdir);
-
-            URL url = FrontendController.class.getClassLoader().getResource("static/moka_mini.png");
-            BufferedImage img = ImageIO.read(url);
-            img = new BlurSimpleAverage().processImageWithExecutorService(img);
-            convertedImages.add(img);
         } catch (IOException e) {
             tmpdir = null;
         }
@@ -85,50 +61,11 @@ public class FrontendController {
         Path path = Paths.get(tmpdir, file.getOriginalFilename());
         Files.write(path, file.getBytes());
         String fileName = "";
-        int index = -1;
         fileName += file.getOriginalFilename();
         redirectAttributes.addFlashAttribute("successMessage", "File upload successfully, uploaded file name: " + fileName);
         log.atInfo().log("File upload successfully, uploaded file name: " + file.getOriginalFilename());
-        log.atInfo().log("Effect is: " + effect);
-        log.atInfo().log("Option is: " + options);
 
-        try{
-            URL url = FrontendController.class.getClassLoader().getResource("static/moka.png");
-
-            if(!fileName.isEmpty()){
-                url = Path.of(tmpdir+"/"+fileName).toUri().toURL();
-            }
-            assert url != null;
-
-            BufferedImage img = ImageIO.read(url);
-
-            img = switch (effect) {
-                case EFFECT_BLUR -> switch (options) {
-                    case MODE_EXECUTOR -> blur.processImageWithExecutorService(img);
-                    case MODE_THREADS -> blur.processImageWithThreads(img);
-                    case MODE_SINGLE -> blur.processImage(img);
-                    default -> img;
-                };
-                case EFFECT_MAGENTA -> switch (options) {
-                    case MODE_EXECUTOR -> magentaDeepFry.processImageWithExecutorService(img);
-                    case MODE_THREADS -> magentaDeepFry.processImageWithThreads(img);
-                    case MODE_SINGLE -> magentaDeepFry.processImage(img);
-                    default -> img;
-                };
-                case EFFECT_PALETTE_16 -> switch (options){
-                    case MODE_EXECUTOR -> palette16.processImageWithExecutorService(img);
-                    case MODE_THREADS -> palette16.processImageWithThreads(img);
-                    case MODE_SINGLE -> palette16.processImage(img);
-                    default -> img;
-                };
-                default -> img;
-            };
-            
-            convertedImages.add(img);
-            index = convertedImages.indexOf(img);
-        } catch (IOException e) {
-            log.atWarn().log(e.toString());
-        }
+        int index = manipulatorService.processImage(Path.of(tmpdir+"/"+fileName).toUri().toURL(), effect, options);
         
         return "redirect:/output?fileName=" + fileName + "&cid=" + index;
     }
@@ -138,7 +75,7 @@ public class FrontendController {
                          @RequestParam(name="cid", defaultValue="0") String index,
                          Model model) {
         
-        BufferedImage img = convertedImages.get(Integer.parseInt(index));
+        BufferedImage img = manipulatorService.getConvertedImage(Integer.parseInt(index));
 
         String base64img = "data:image/png;base64, "+imgToBase64String(img);
         model.addAttribute("imageURI", base64img);
