@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
@@ -20,6 +22,9 @@ public class ManipulatorService {
     public static final String EFFECT_BLUR = "blur";
     public static final String EFFECT_MAGENTA = "magenta";
     public static final String EFFECT_PALETTE_16 = "palette16";
+    public static final String EFFECT_SCALE_DOWN_2X = "scaleDown2x";
+    public static final String EFFECT_SCALE_UP_2X = "scaleUp2x";
+
 
     @Autowired
     BlurSimpleAverage blur;
@@ -74,6 +79,8 @@ public class ManipulatorService {
                     case MODE_SINGLE -> palette16.processImage(img);
                     default -> img;
                 };
+                case EFFECT_SCALE_DOWN_2X -> scale(img, 0.5);
+                case EFFECT_SCALE_UP_2X -> scale(img, 2);
                 default -> img;
             };
 
@@ -87,5 +94,17 @@ public class ManipulatorService {
     
     public BufferedImage getConvertedImage(int index) {
         return convertedImages.get(index);
+    }
+
+    private static BufferedImage scale(final BufferedImage before, final double scale) {
+        int w = before.getWidth();
+        int h = before.getHeight();
+        int w2 = (int) (w * scale);
+        int h2 = (int) (h * scale);
+        BufferedImage after = new BufferedImage(w2, h2, before.getType());
+        AffineTransform scaleInstance = AffineTransform.getScaleInstance(scale, scale);
+        AffineTransformOp scaleOp = new AffineTransformOp(scaleInstance, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+        scaleOp.filter(before, after);
+        return after;
     }
 }
