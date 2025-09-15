@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Component("magentaDeepFry")
-public class ImageManipulator {
+public class ImageManipulator{
     private static final Logger log = LoggerFactory.getLogger(ImageManipulator.class);
     
     public Color processPixel(int x, int y, BufferedImage image){
@@ -21,43 +21,72 @@ public class ImageManipulator {
     }
     
     public BufferedImage processImage(BufferedImage image){
-        log.atInfo().log(
-            String.format("Processing %d by %d image without multithreading", image.getWidth(), image.getHeight()));
         BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
         
-        for (int x = 0; x < image.getWidth(); x++) {
-            for (int y = 0; y < image.getHeight(); y++) {
-                output.setRGB(x, y, processPixel(x, y, image).getRGB());
+        Thread t = new Thread(() -> {
+            log.atInfo().log(
+                String.format("Processing %d by %d image without multithreading", image.getWidth(), image.getHeight()));
+            
+            for (int x = 0; x < image.getWidth(); x++) {
+                for (int y = 0; y < image.getHeight(); y++) {
+                    output.setRGB(x, y, processPixel(x, y, image).getRGB());
+                }
             }
-        }
+        });
+        
+        t.start();
         
         return output;
     }
 
-    public BufferedImage processImageInParallel(BufferedImage image){
+    public BufferedImage processImageWithExecutorService(BufferedImage image){
+        log.atInfo().log(
+            String.format("Processing %d by %d image with ExecutorService", image.getWidth(), image.getHeight()));
+        BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        
+        Thread t = new Thread(() -> {
+            try {
+                ExecutorService EXEC = Executors.newCachedThreadPool();
+                List<Callable<Integer>> tasks = new ArrayList<>();
+                for (int x = 0; x < image.getWidth(); x++) {
+                    for (int y = 0; y < image.getHeight(); y++) {
+                        final int finalX = x;
+                        final int finalY = y;
+                        Callable<Integer> c = () -> {
+                            output.setRGB(finalX, finalY, processPixel(finalX, finalY, image).getRGB());
+                            return 0;
+                        };
+                        tasks.add(c);
+                    }
+                }
+                EXEC.invokeAll(tasks);
+            } catch(Exception e) {
+                log.atError().log(e.getMessage());
+            }
+        });
+
+        t.start();
+        
+        return output;
+    }
+
+    public BufferedImage processImageWithThreads(BufferedImage image){
         log.atInfo().log(
             String.format("Processing %d by %d image with multithreading", image.getWidth(), image.getHeight()));
         BufferedImage output = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        
-        try {
-            ExecutorService EXEC = Executors.newCachedThreadPool();
-            List<Callable<Integer>> tasks = new ArrayList<>();
-            for (int x = 0; x < image.getWidth(); x++) {
-                for (int y = 0; y < image.getHeight(); y++) {
-                    final int finalX = x;
-                    final int finalY = y;
-                    Callable<Integer> c = () -> {
-                        output.setRGB(finalX, finalY, processPixel(finalX, finalY, image).getRGB());
-                        return 0;
-                    };
-                    tasks.add(c);
+
+        Thread t = new Thread(() -> {
+            try {
+                for (int x = 0; x < image.getWidth(); x++) {
+                    new ImageManipulatorThread(image, output, x).start();
                 }
+            } catch(Exception e) {
+                log.atError().log(e.getMessage());
             }
-            EXEC.invokeAll(tasks);
-        } catch(Exception e) {
-            log.atError().log(e.getMessage());
-        }
-        
+        });
+
+        t.start();
+
         return output;
     }
     
@@ -68,5 +97,24 @@ public class ImageManipulator {
 
     public static boolean isWithinBounds(int x, int y, BufferedImage image) {
         return x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight();
+    }
+    
+    private class ImageManipulatorThread extends Thread{
+        private final BufferedImage image;
+        private final BufferedImage output;
+        private final int x;
+        
+        public ImageManipulatorThread(BufferedImage image, BufferedImage output, int x) {
+            this.image = image;
+            this.output = output;
+            this.x = x;
+        }
+        
+        @Override
+        public void run() {
+            for (int y=0; y < image.getHeight(); y++) {
+                output.setRGB(x, y, processPixel(x, y, image).getRGB());
+            }
+        }
     }
 }

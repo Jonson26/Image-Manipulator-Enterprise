@@ -29,9 +29,13 @@ import java.util.Base64;
 
 @Controller
 public class FrontendController {
-    public static final String MULTI = "multi";
-    public static final String SINGLE = "single";
-    
+    public static final String MODE_EXECUTOR = "executor";
+    public static final String MODE_SINGLE = "single";
+    public static final String MODE_THREADS = "threads";
+    public static final String EFFECT_BLUR = "blur";
+    public static final String EFFECT_MAGENTA = "magenta";
+    public static final String EFFECT_PALETTE_16 = "palette16";
+
     @Autowired
     BlurSimpleAverage blur;
     
@@ -54,7 +58,7 @@ public class FrontendController {
 
             URL url = FrontendController.class.getClassLoader().getResource("static/moka_mini.png");
             BufferedImage img = ImageIO.read(url);
-            img = new BlurSimpleAverage().processImageInParallel(img);
+            img = new BlurSimpleAverage().processImageWithExecutorService(img);
             convertedImages.add(img);
         } catch (IOException e) {
             tmpdir = null;
@@ -99,19 +103,22 @@ public class FrontendController {
             BufferedImage img = ImageIO.read(url);
 
             img = switch (effect) {
-                case "blur" -> switch (options) {
-                    case MULTI -> blur.processImageInParallel(img);
-                    case SINGLE -> blur.processImage(img);
+                case EFFECT_BLUR -> switch (options) {
+                    case MODE_EXECUTOR -> blur.processImageWithExecutorService(img);
+                    case MODE_THREADS -> blur.processImageWithThreads(img);
+                    case MODE_SINGLE -> blur.processImage(img);
                     default -> img;
                 };
-                case "magenta" -> switch (options) {
-                    case MULTI -> magentaDeepFry.processImageInParallel(img);
-                    case SINGLE -> magentaDeepFry.processImage(img);
+                case EFFECT_MAGENTA -> switch (options) {
+                    case MODE_EXECUTOR -> magentaDeepFry.processImageWithExecutorService(img);
+                    case MODE_THREADS -> magentaDeepFry.processImageWithThreads(img);
+                    case MODE_SINGLE -> magentaDeepFry.processImage(img);
                     default -> img;
                 };
-                case "palette16" -> switch (options){
-                    case MULTI -> palette16.processImageInParallel(img);
-                    case SINGLE -> palette16.processImage(img);
+                case EFFECT_PALETTE_16 -> switch (options){
+                    case MODE_EXECUTOR -> palette16.processImageWithExecutorService(img);
+                    case MODE_THREADS -> palette16.processImageWithThreads(img);
+                    case MODE_SINGLE -> palette16.processImage(img);
                     default -> img;
                 };
                 default -> img;
