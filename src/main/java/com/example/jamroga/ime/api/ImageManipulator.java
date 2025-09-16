@@ -70,6 +70,7 @@ public class ImageManipulator{
                 output.finish();
             } catch(Exception e) {
                 log.atError().log(e.getMessage());
+                Thread.currentThread().interrupt();
             }
         });
 

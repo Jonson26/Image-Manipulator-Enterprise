@@ -25,20 +25,20 @@ public class ManipulatorService {
     public static final String EFFECT_PALETTE_16 = "palette16";
     public static final String EFFECT_SCALE_DOWN_2X = "scaleDown2x";
     public static final String EFFECT_SCALE_UP_2X = "scaleUp2x";
+    
+    private final BlurSimpleAverage blur;
 
+    private final ImageManipulator magentaDeepFry;
 
-    @Autowired
-    BlurSimpleAverage blur;
-
-    @Autowired
-    ImageManipulator magentaDeepFry;
-
-    @Autowired
-    MapTo16Colours palette16;
+    private final MapTo16Colours palette16;
     
     private final ArrayList<OutputContainer> convertedImages = new ArrayList<>();
-
-    public ManipulatorService() {
+    
+    @Autowired
+    public ManipulatorService(BlurSimpleAverage blur, ImageManipulator magentaDeepFry, MapTo16Colours palette16) {
+        this.blur = blur;
+        this.magentaDeepFry = magentaDeepFry;
+        this.palette16 = palette16;
         try {
             URL url = FrontendController.class.getClassLoader().getResource("static/moka_mini.png");
             BufferedImage img = ImageIO.read(url);

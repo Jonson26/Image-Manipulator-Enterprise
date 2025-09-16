@@ -33,6 +33,8 @@ public class BlurSimpleAverage extends ImageManipulator{
             }
         }
         
+        if(counter==0) counter=1;
+        
         red = red / counter;
         green = green / counter;
         blue = blue / counter;
@@ -44,12 +46,10 @@ public class BlurSimpleAverage extends ImageManipulator{
     @Override
     public int setParameter(String parameter, String value){
         parameter = parameter.toLowerCase();
-        switch (parameter){
-            case "intensity":
-                intensity = Integer.parseInt(value);
-                return 0;
-            default:
-                return -1;
+        if (parameter.equals("intensity")) {
+            intensity = Integer.parseInt(value);
+            return 0;
         }
+        return -1;
     }
 }

@@ -31,14 +31,15 @@ public class FrontendController {
             location.reload();
         }, 1000);
         """;
-    @Autowired
-    ManipulatorService manipulatorService;
+    private final ManipulatorService manipulatorService;
 
     private String tmpdir;
     
-    public final List<String> uploadedFiles = new ArrayList<>();
-
-    public FrontendController() {
+    private final List<String> uploadedFiles = new ArrayList<>();
+    
+    @Autowired
+    public FrontendController(ManipulatorService manipulatorService) {
+        this.manipulatorService = manipulatorService;
         try {
             tmpdir = Files.createTempDirectory("IME_TMP_DIR-").toFile().getAbsolutePath();
             log.atInfo().log("Temporary directory created at "+tmpdir);
