@@ -8,7 +8,7 @@
 <body>
     <table>
         <tr>
-            <td colspan="2">Image Conversion Input Page</td>
+            <th colspan="2">Image Conversion Input Page</th>
         </tr>
         <tr>
             <form method="POST" enctype="multipart/form-data" action="/uploadFile">
@@ -36,6 +36,14 @@
                     <button type="submit" class="btn btn-primary">Upload</button>
                 </td>
             </form>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <p><b>Uploaded Files</b></p>
+                <ul th:each="item : ${fileListing}">
+                    <li th:text="${item}">Item description here...</li>
+                </ul>
+            </td>
         </tr>
     </table>
 </body>

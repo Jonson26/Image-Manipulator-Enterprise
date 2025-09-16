@@ -19,7 +19,9 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 @Controller
 @Slf4j
@@ -33,6 +35,8 @@ public class FrontendController {
     ManipulatorService manipulatorService;
 
     private String tmpdir;
+    
+    public final List<String> uploadedFiles = new ArrayList<>();
 
     public FrontendController() {
         try {
@@ -45,6 +49,7 @@ public class FrontendController {
 
     @GetMapping("/input")
     public String input(Model model) {
+        if(!uploadedFiles.isEmpty()) model.addAttribute("fileListing", uploadedFiles);
         return "input";
     }
 
@@ -62,6 +67,7 @@ public class FrontendController {
         Files.write(path, file.getBytes());
         String fileName = file.getOriginalFilename();
         log.atInfo().log("File upload successfully, uploaded file name: " + fileName);
+        uploadedFiles.add(fileName);
 
         int index = manipulatorService.processImage(tmpdir, fileName, effect, options);
         
