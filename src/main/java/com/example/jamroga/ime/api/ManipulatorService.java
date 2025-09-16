@@ -1,8 +1,7 @@
 package com.example.jamroga.ime.api;
 
 import com.example.jamroga.ime.FrontendController;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 @Component("manipulatorService")
+@Slf4j
 public class ManipulatorService {
     public static final String MODE_EXECUTOR = "executor";
     public static final String MODE_SINGLE = "single";
@@ -37,8 +37,6 @@ public class ManipulatorService {
     MapTo16Colours palette16;
     
     private final ArrayList<OutputContainer> convertedImages = new ArrayList<>();
-
-    private static final Logger log = LoggerFactory.getLogger(ManipulatorService.class);
 
     public ManipulatorService() {
         try {

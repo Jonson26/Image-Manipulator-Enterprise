@@ -2,8 +2,7 @@ package com.example.jamroga.ime;
 
 import com.example.jamroga.ime.api.ManipulatorService;
 import com.example.jamroga.ime.api.OutputContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,13 +22,17 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 @Controller
+@Slf4j
 public class FrontendController {
+    public static final String PAGE_RELOAD_SCRIPT = """
+        setTimeout(function(){
+            location.reload();
+        }, 1000);
+        """;
     @Autowired
     ManipulatorService manipulatorService;
 
     private String tmpdir;
-
-    private static final Logger log = LoggerFactory.getLogger(FrontendController.class);
 
     public FrontendController() {
         try {
@@ -57,9 +60,8 @@ public class FrontendController {
 
         Path path = Paths.get(tmpdir, file.getOriginalFilename());
         Files.write(path, file.getBytes());
-        String fileName = "";
-        fileName += file.getOriginalFilename();
-        log.atInfo().log("File upload successfully, uploaded file name: " + file.getOriginalFilename());
+        String fileName = file.getOriginalFilename();
+        log.atInfo().log("File upload successfully, uploaded file name: " + fileName);
 
         int index = manipulatorService.processImage(tmpdir, fileName, effect, options);
         
@@ -75,14 +77,7 @@ public class FrontendController {
         String base64img = "data:image/png;base64, "+imgToBase64String(out.getImage());
         model.addAttribute("fileName", out.getFilename());
         model.addAttribute("finished", statusString(out.isFinished()));
-        if(!out.isFinished()) {
-            model.addAttribute("script", 
-                """
-                setTimeout(function(){
-                    location.reload();
-                }, 1000);
-                """);
-        }
+        if(!out.isFinished()) model.addAttribute("script", PAGE_RELOAD_SCRIPT);
         model.addAttribute("imageURI", base64img);
         model.addAttribute("newImageName", "blurred-"+changeExtension(out.getFilename()));
         return "output";

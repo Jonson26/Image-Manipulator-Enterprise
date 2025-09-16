@@ -1,15 +1,16 @@
 package com.example.jamroga.ime.api;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
 @Component("palette16")
+@Slf4j
 public class MapTo16Colours extends ImageManipulator{
-    private static final Logger log = LoggerFactory.getLogger(MapTo16Colours.class);
     private static final PaletteElement[] palette = {
         new PaletteElement(  0,   0,  0), //  1 - Black
         new PaletteElement(255, 255,255), //  2 - White
@@ -42,7 +43,7 @@ public class MapTo16Colours extends ImageManipulator{
         double lowestDistance = Double.MAX_VALUE;
         for(int i=0;i<palette.length;i++){
             PaletteElement element = palette[i];
-            double distance = pythagoras3d(red, green, blue, element.red, element.green, element.blue);
+            double distance = pythagoras3d(red, green, blue, element.getRed(), element.getGreen(), element.getBlue());
             if(distance < lowestDistance){
                 lowestDistance = distance;
                 lowestIndex = i;
@@ -50,9 +51,9 @@ public class MapTo16Colours extends ImageManipulator{
         }
         
         PaletteElement element = palette[lowestIndex];
-        red = element.red;
-        green = element.green;
-        blue = element.blue;
+        red = element.getRed();
+        green = element.getGreen();
+        blue = element.getBlue();
         
         return new Color(red,green,blue,alpha);
     }
@@ -62,15 +63,11 @@ public class MapTo16Colours extends ImageManipulator{
         return Math.sqrt((z1-z2)*(z1-z2)+l1);
     }
     
+    @AllArgsConstructor
+    @Getter
     private static class PaletteElement {
-        final int red;
-        final int green;
-        final int blue;
-
-        public PaletteElement(int red, int green, int blue) {
-            this.red = red;
-            this.green = green;
-            this.blue = blue;
-        }
+        private final int red;
+        private final int green;
+        private final int blue;
     }
 }

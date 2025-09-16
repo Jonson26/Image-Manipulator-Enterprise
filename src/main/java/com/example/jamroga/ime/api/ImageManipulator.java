@@ -1,7 +1,7 @@
 package com.example.jamroga.ime.api;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.awt.*;
@@ -13,8 +13,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Component("magentaDeepFry")
+@Slf4j
 public class ImageManipulator{
-    private static final Logger log = LoggerFactory.getLogger(ImageManipulator.class);
     
     public Color processPixel(int x, int y, BufferedImage image){
         return new Color((image.getRGB(x, y)+ Color.MAGENTA.getRGB())/2);
@@ -109,16 +109,11 @@ public class ImageManipulator{
         return x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight();
     }
     
+    @AllArgsConstructor
     private class ImageManipulatorThread extends Thread{
         private final BufferedImage image;
         private final OutputContainer output;
         private final int x;
-        
-        public ImageManipulatorThread(BufferedImage image, OutputContainer output, int x) {
-            this.image = image;
-            this.output = output;
-            this.x = x;
-        }
         
         @Override
         public void run() {
@@ -126,7 +121,7 @@ public class ImageManipulator{
                 output.getImage().setRGB(x, y, processPixel(x, y, image).getRGB());
             }
             output.incrementProcessCounter();
-            if(output.getProcessCounter()==image.getWidth()){
+            if(output.getProcessCounter().get()==image.getWidth()){
                 output.finish();
             }
         }
