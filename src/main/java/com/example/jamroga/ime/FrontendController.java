@@ -72,11 +72,11 @@ public class FrontendController {
 
         int index = manipulatorService.processImage(tmpdir, fileName, effect, options);
         
-        return "redirect:/output?cid=" + index;
+        return "redirect:/output?id=" + index;
     }
     
     @GetMapping("/output")
-    public String output(@RequestParam(name="cid", defaultValue="0") String index,
+    public String output(@RequestParam(name="id", defaultValue="0") String index,
                          Model model) {
         
         OutputContainer out = manipulatorService.getConvertedImage(Integer.parseInt(index));
