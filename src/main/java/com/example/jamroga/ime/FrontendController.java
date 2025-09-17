@@ -83,10 +83,10 @@ public class FrontendController {
         
         OutputContainer out = processorService.getConvertedImage(Integer.parseInt(index));
 
-        String base64img = "data:image/png;base64, "+imgToBase64String(out.getImage());
         model.addAttribute("fileName", out.getFilename());
         model.addAttribute("finished", statusString(out.isFinished()));
         if(!out.isFinished()) model.addAttribute("script", PAGE_RELOAD_SCRIPT);
+        String base64img = "data:image/png;base64, "+imgToBase64String(out.getImage());
         model.addAttribute("imageURI", base64img);
         model.addAttribute("newImageName", "blurred-"+changeExtension(out.getFilename()));
         return "output";
