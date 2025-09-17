@@ -1,7 +1,6 @@
 package com.example.jamroga.ime.api.implementations;
 
 import com.example.jamroga.ime.api.interfaces.PixelProcessor;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +14,7 @@ import java.util.Objects;
 @Component
 @Slf4j
 public class MapTo16Colours implements PixelProcessor {
-    public static final int[][] DITHER_MATRIX = new int[][]{
+    private static final int[][] DITHER_MATRIX = new int[][]{
         { 0, 32,  8, 40,  2, 34, 10, 42},
         {48, 16, 56, 24, 50, 18, 58, 26},
         {12, 44,  4, 36, 14, 46,  6, 38},
@@ -130,7 +129,6 @@ public class MapTo16Colours implements PixelProcessor {
         return "Map image to 16 colour palette";
     }
 
-    @Getter
     private record Pixel(int red, int green, int blue) {
     }
 }

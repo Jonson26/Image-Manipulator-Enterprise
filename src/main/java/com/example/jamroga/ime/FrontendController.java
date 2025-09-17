@@ -1,7 +1,7 @@
 package com.example.jamroga.ime;
 
-import com.example.jamroga.ime.api.ManipulatorService;
 import com.example.jamroga.ime.api.OutputContainer;
+import com.example.jamroga.ime.api.ProcessorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -31,15 +31,15 @@ public class FrontendController {
             location.reload();
         }, 1000);
         """;
-    private final ManipulatorService manipulatorService;
+    private final ProcessorService processorService;
 
     private String tmpdir;
     
     private final List<String> uploadedFiles = new ArrayList<>();
     
     @Autowired
-    public FrontendController(ManipulatorService manipulatorService) {
-        this.manipulatorService = manipulatorService;
+    public FrontendController(ProcessorService processorService) {
+        this.processorService = processorService;
         try {
             tmpdir = Files.createTempDirectory("IME_TMP_DIR-").toFile().getAbsolutePath();
             log.atInfo().log("Temporary directory created at "+tmpdir);
@@ -51,6 +51,8 @@ public class FrontendController {
     @GetMapping("/input")
     public String input(Model model) {
         if(!uploadedFiles.isEmpty()) model.addAttribute("fileListing", uploadedFiles);
+        model.addAttribute("effects", processorService.getPixelProcessorMenuElements());
+        model.addAttribute("options", processorService.getImageProcessorMenuElements());
         return "input";
     }
 
@@ -70,7 +72,7 @@ public class FrontendController {
         log.atInfo().log("File upload successfully, uploaded file name: " + fileName);
         uploadedFiles.add(fileName);
 
-        int index = manipulatorService.processImage(tmpdir, fileName, effect, options);
+        int index = processorService.processImage(tmpdir, fileName, effect, options);
         
         return "redirect:/output?id=" + index;
     }
@@ -79,7 +81,7 @@ public class FrontendController {
     public String output(@RequestParam(name="id", defaultValue="0") String index,
                          Model model) {
         
-        OutputContainer out = manipulatorService.getConvertedImage(Integer.parseInt(index));
+        OutputContainer out = processorService.getConvertedImage(Integer.parseInt(index));
 
         String base64img = "data:image/png;base64, "+imgToBase64String(out.getImage());
         model.addAttribute("fileName", out.getFilename());

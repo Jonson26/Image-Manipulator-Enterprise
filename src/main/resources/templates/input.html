@@ -18,18 +18,12 @@
                     <br>
                     <label>Effect:</label>
                     <select id="effect" name="effect">
-                        <option value="blur">Blur Image</option>
-                        <option value="magenta">Magenta Deep Fry</option>
-                        <option value="palette16">Map to 16 Colours</option>
-                        <option value="scaleDown2x">Make 2X Smaller</option>
-                        <option value="scaleUp2x">Make 2X Bigger</option>
+                        <option th:each="item : ${effects}" th:value="${item.name()}" th:text="${item.description()}">...</option>
                     </select>
                     <br>
                     <label>Process options:</label>
                     <select id="options" name="options">
-                        <option value="threads">Classic Threads</option>
-                        <option value="executor">Executor Service</option>
-                        <option value="single">Single Thread</option>
+                        <option th:each="item : ${options}" th:value="${item.name()}" th:text="${item.description()}">...</option>
                     </select>
                 </td>
                 <td>
