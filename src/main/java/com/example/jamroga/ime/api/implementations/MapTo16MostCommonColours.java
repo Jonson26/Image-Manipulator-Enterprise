@@ -11,6 +11,7 @@ import com.example.jamroga.ime.api.interfaces.PixelProcessor;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static java.awt.Transparency.TRANSLUCENT;
 import static java.util.Map.*;
 
 @Component
@@ -82,7 +83,7 @@ public class MapTo16MostCommonColours implements PixelProcessor {
         int green = (argb >> 8) & 0xFF;
         int blue = argb & 0xFF;
         
-        int bitmask = 0b11111100;
+        int bitmask = 0b11111111;
         red   &= bitmask;
         green &= bitmask;
         blue  &= bitmask;
@@ -92,12 +93,14 @@ public class MapTo16MostCommonColours implements PixelProcessor {
     
     private synchronized void updatePalette(BufferedImage image){
         if(image == lastSampledImage) return;
+        log.atInfo().log("Reloading palette!");
+        BufferedImage img = getScaledImage(image, 64, 64);
         palette.clear();
         
         HashMap<Pixel, Integer> colorMap = new HashMap<>();
-        for(int x=0; x<image.getWidth(); x++){
-            for(int y=0; y<image.getHeight(); y++){
-                Pixel p = trimPixel(image.getRGB(x,y));
+        for(int x=0; x<img.getWidth(); x++){
+            for(int y=0; y<img.getHeight(); y++){
+                Pixel p = trimPixel(img.getRGB(x,y));
                 if(colorMap.containsKey(p)){
                     colorMap.put(p, colorMap.get(p)+1);
                 }else{
@@ -124,6 +127,26 @@ public class MapTo16MostCommonColours implements PixelProcessor {
             temp.put(aa.getKey(), aa.getValue());
         }
         return temp;
+    }
+
+    private static BufferedImage getScaledImage(BufferedImage src, int w, int h){
+        int finalw = w;
+        int finalh = h;
+        double factor;
+        if(src.getWidth() > src.getHeight()){
+            factor = ((double)src.getHeight()/(double)src.getWidth());
+            finalh = (int)(finalw * factor);
+        }else{
+            factor = ((double)src.getWidth()/(double)src.getHeight());
+            finalw = (int)(finalh * factor);
+        }
+
+        BufferedImage resizedImg = new BufferedImage(finalw, finalh, TRANSLUCENT);
+        Graphics2D g2 = resizedImg.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.drawImage(src, 0, 0, finalw, finalh, null);
+        g2.dispose();
+        return resizedImg;
     }
 
     @Override
