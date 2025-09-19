@@ -27,12 +27,8 @@ public class FrontendController {
             location.reload();
         }, 1000);
         """;
-    private static final String DUMMY_USER_NAME = "user";
-    private static final String DUMMY_USER_PASSWORD = "password";
-    private boolean logged_in = false;
-    
     private final ProcessorService processorService;
-
+    
     private String tmpdir;
     
     private final List<String> uploadedFiles = new ArrayList<>();
@@ -50,7 +46,6 @@ public class FrontendController {
 
     @GetMapping("/input")
     public String input(Model model) {
-        if (!logged_in) return "redirect:/loginpage.html";
         if(!uploadedFiles.isEmpty()) model.addAttribute("fileListing", uploadedFiles);
         model.addAttribute("effects", processorService.getPixelProcessorMenuElements());
         model.addAttribute("options", processorService.getImageProcessorMenuElements());
@@ -81,8 +76,6 @@ public class FrontendController {
     @GetMapping("/output")
     public String output(@RequestParam(name="id", defaultValue="0") String index,
                          Model model) {
-        if (!logged_in) return "redirect:/loginpage.html";
-        
         OutputContainer out = processorService.getConvertedImage(Integer.parseInt(index));
 
         model.addAttribute("fileName", out.getFilename());
@@ -92,16 +85,6 @@ public class FrontendController {
         model.addAttribute("imageURI", base64img);
         model.addAttribute("newImageName", "blurred-"+changeExtension(out.getFilename()));
         return "output";
-    }
-    
-    @PostMapping("/login")
-    public String login(@RequestParam(value = "user", defaultValue = "") String username, 
-                        @RequestParam(value = "pass", defaultValue = "") String password,
-                        Model model) {
-        log.atInfo().log(String.format("Login requested: [User:%s Password:%s]", username, password));
-        logged_in = username.equals(DUMMY_USER_NAME) && password.equals(DUMMY_USER_PASSWORD);
-        model.addAttribute("status", statusString(logged_in)+":3"+statusString(logged_in));
-        return "login";
     }
 
     private static String changeExtension(String f) {

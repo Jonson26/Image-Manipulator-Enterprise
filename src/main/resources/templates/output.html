@@ -16,8 +16,11 @@
             <td class="text-success" th:text="${finished}"></td>
         </tr>
         <tr>
-            <td><img alt="Converted Image" th:src="${imageURI}"/></td>
+            <td><img alt="Converted Picture" th:src="${imageURI}"/></td>
             <td><a th:download="${newImageName}" th:href="${imageURI}">Download</a></td>
+        </tr>
+        <tr>
+            <td colspan="2"><a href="/index.html">Home</a></td>
         </tr>
     </table>
 </body>
