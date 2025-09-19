@@ -16,7 +16,6 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -34,6 +33,7 @@ public class ProcessorService {
         
         try {
             URL url = FrontendController.class.getClassLoader().getResource("static/moka_mini.png");
+            assert url != null;
             BufferedImage img = ImageIO.read(url);
             OutputContainer out = new ClassicProcessor()
                 .processImage(img, new BlurSimpleAverage(), "moka_mini.png");
@@ -46,13 +46,13 @@ public class ProcessorService {
     public List<MenuElement> getImageProcessorMenuElements() {
         return imageProcessors.stream()
             .map(ip -> new MenuElement(ip.getName(), ip.getDescription()))
-            .collect(Collectors.toList());
+            .toList();
     }
 
     public List<MenuElement> getPixelProcessorMenuElements() {
         return pixelProcessors.stream()
             .map(ip -> new MenuElement(ip.getName(), ip.getDescription()))
-            .collect(Collectors.toList());
+            .toList();
     }
 
     public int processImage(String dir, String filename, String effect, String options) throws IOException {

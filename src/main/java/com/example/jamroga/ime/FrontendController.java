@@ -11,16 +11,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.RenderedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 @Controller
@@ -31,6 +26,10 @@ public class FrontendController {
             location.reload();
         }, 1000);
         """;
+    private static final String DUMMY_USER_NAME = "user";
+    private static final String DUMMY_USER_PASSWORD = "password";
+    private boolean logged_in = false;
+    
     private final ProcessorService processorService;
 
     private String tmpdir;
@@ -50,6 +49,7 @@ public class FrontendController {
 
     @GetMapping("/input")
     public String input(Model model) {
+        if (!logged_in) return "redirect:/loginpage.html";
         if(!uploadedFiles.isEmpty()) model.addAttribute("fileListing", uploadedFiles);
         model.addAttribute("effects", processorService.getPixelProcessorMenuElements());
         model.addAttribute("options", processorService.getImageProcessorMenuElements());
@@ -80,27 +80,27 @@ public class FrontendController {
     @GetMapping("/output")
     public String output(@RequestParam(name="id", defaultValue="0") String index,
                          Model model) {
+        if (!logged_in) return "redirect:/loginpage.html";
         
         OutputContainer out = processorService.getConvertedImage(Integer.parseInt(index));
 
         model.addAttribute("fileName", out.getFilename());
         model.addAttribute("finished", statusString(out.isFinished()));
         if(!out.isFinished()) model.addAttribute("script", PAGE_RELOAD_SCRIPT);
-        String base64img = "data:image/png;base64, "+imgToBase64String(out.getImage());
+        String base64img = "data:image/png;base64, "+MiscUtils.imgToBase64String(out.getImage());
         model.addAttribute("imageURI", base64img);
         model.addAttribute("newImageName", "blurred-"+changeExtension(out.getFilename()));
         return "output";
     }
-
-    private static String imgToBase64String(final RenderedImage img) {
-        final ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-        try {
-            ImageIO.write(img, "png", os);
-            return Base64.getEncoder().encodeToString(os.toByteArray());
-        } catch (final IOException ioe) {
-            throw new UncheckedIOException(ioe);
-        }
+    
+    @PostMapping("/login")
+    public String login(@RequestParam(value = "user", defaultValue = "") String username, 
+                        @RequestParam(value = "pass", defaultValue = "") String password,
+                        Model model) {
+        log.atInfo().log(String.format("Login requested: [User:%s Password:%s]", username, password));
+        logged_in = username.equals(DUMMY_USER_NAME) && password.equals(DUMMY_USER_PASSWORD);
+        model.addAttribute("status", statusString(logged_in)+":3"+statusString(logged_in));
+        return "login";
     }
 
     private static String changeExtension(String f) {

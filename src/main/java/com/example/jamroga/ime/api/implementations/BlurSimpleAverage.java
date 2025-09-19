@@ -1,5 +1,6 @@
 package com.example.jamroga.ime.api.implementations;
 
+import com.example.jamroga.ime.MiscUtils;
 import com.example.jamroga.ime.api.interfaces.PixelProcessor;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +22,7 @@ public class BlurSimpleAverage implements PixelProcessor {
 
         for(int i=-intensity; i<=intensity; i++){
             for(int j=-intensity; j<=intensity; j++){
-                if(isWithinBounds(x+i, y+j, image)){
+                if(MiscUtils.isWithinBounds(x+i, y+j, image)){
                     int argb = image.getRGB(x+i, y+j);
 
                     red += (argb >> 16) & 0xFF;
@@ -52,9 +53,5 @@ public class BlurSimpleAverage implements PixelProcessor {
     @Override
     public String getDescription() {
         return "Blur Image";
-    }
-
-    public static boolean isWithinBounds(int x, int y, BufferedImage image) {
-        return x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight();
     }
 }

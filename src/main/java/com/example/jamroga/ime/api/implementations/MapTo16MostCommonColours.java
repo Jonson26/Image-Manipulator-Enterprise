@@ -5,30 +5,20 @@ import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
+import com.example.jamroga.ime.MiscUtils;
+import com.example.jamroga.ime.api.Pixel;
 import org.springframework.stereotype.Component;
 
 import com.example.jamroga.ime.api.interfaces.PixelProcessor;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static java.awt.Transparency.TRANSLUCENT;
 import static java.util.Map.*;
 
 @Component
 @Slf4j
 public class MapTo16MostCommonColours implements PixelProcessor {
-    private static final int[][] DITHER_MATRIX = new int[][]{
-        { 0, 32,  8, 40,  2, 34, 10, 42},
-        {48, 16, 56, 24, 50, 18, 58, 26},
-        {12, 44,  4, 36, 14, 46,  6, 38},
-        {60, 28, 52, 20, 62, 30, 54, 22},
-        { 3, 35, 11, 43,  1, 33,  9, 41},
-        {51, 19, 59, 27, 49, 17, 57, 25},
-        {15, 47,  7, 39, 13, 45,  5, 37},
-        {63, 31, 55, 23, 61, 29, 53, 21}
-    };
-    
-    private final ArrayList<Pixel> palette = new ArrayList<>();
+    private final List<Pixel> palette = new ArrayList<>();
     
     private BufferedImage lastSampledImage;
     
@@ -42,40 +32,14 @@ public class MapTo16MostCommonColours implements PixelProcessor {
         int blue = argb & 0xFF;
         int alpha = (argb >> 24) & 0xFF;
 
-        int offset = dither(x, y);
+        int offset = MiscUtils.dither(x, y);
 
-        Pixel element = nearestNeigbour(red+offset, green+offset, blue+offset);
+        Pixel element = MiscUtils.nearestNeigbour(palette,red+offset, green+offset, blue+offset);
         red = element.red();
         green = element.green();
         blue = element.blue();
 
         return new Color(red,green,blue,alpha);
-    }
-
-    private Pixel nearestNeigbour(int red, int green, int blue) {
-        int lowestIndex = 0;
-        double lowestDistance = Double.MAX_VALUE;
-        for(int i=0;i<palette.size();i++){
-            Pixel element = palette.get(i);
-            double distance = pythagoras3d(red, green, blue, element.red(), element.green(), element.blue());
-            if(distance < lowestDistance){
-                lowestDistance = distance;
-                lowestIndex = i;
-            }
-        }
-        return palette.get(lowestIndex);
-    }
-
-    private double pythagoras3d (int x1, int y1, int z1, int x2, int y2,int z2){
-        double l1 = (x1-x2)*(x1-x2)*1.0 + (y1-y2)*(y1-y2)*1.0;
-        return Math.sqrt((z1-z2)*(z1-z2)+l1);
-    }
-
-    private int dither(int x, int y){
-        x = x%8;
-        y = y%8;
-
-        return DITHER_MATRIX[x][y];
     }
     
     private Pixel trimPixel(int argb){
@@ -94,7 +58,7 @@ public class MapTo16MostCommonColours implements PixelProcessor {
     private synchronized void updatePalette(BufferedImage image){
         if(image == lastSampledImage) return;
         log.atInfo().log("Reloading palette!");
-        BufferedImage img = getScaledImage(image, 64, 64);
+        BufferedImage img = MiscUtils.getScaledImage(image, 64, 64);
         palette.clear();
         
         HashMap<Pixel, Integer> colorMap = new HashMap<>();
@@ -129,26 +93,6 @@ public class MapTo16MostCommonColours implements PixelProcessor {
         return temp;
     }
 
-    private static BufferedImage getScaledImage(BufferedImage src, int w, int h){
-        int finalw = w;
-        int finalh = h;
-        double factor;
-        if(src.getWidth() > src.getHeight()){
-            factor = ((double)src.getHeight()/(double)src.getWidth());
-            finalh = (int)(finalw * factor);
-        }else{
-            factor = ((double)src.getWidth()/(double)src.getHeight());
-            finalw = (int)(finalh * factor);
-        }
-
-        BufferedImage resizedImg = new BufferedImage(finalw, finalh, TRANSLUCENT);
-        Graphics2D g2 = resizedImg.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2.drawImage(src, 0, 0, finalw, finalh, null);
-        g2.dispose();
-        return resizedImg;
-    }
-
     @Override
     public String getName() {
         return "mapto16mostc";
@@ -157,8 +101,5 @@ public class MapTo16MostCommonColours implements PixelProcessor {
     @Override
     public String getDescription() {
         return "Map image to 16 most common colours";
-    }
-
-    private record Pixel(int red, int green, int blue) {
     }
 }
