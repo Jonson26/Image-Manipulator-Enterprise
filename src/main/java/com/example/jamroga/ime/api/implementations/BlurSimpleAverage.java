@@ -1,6 +1,6 @@
 package com.example.jamroga.ime.api.implementations;
 
-import com.example.jamroga.ime.MiscUtils;
+import com.example.jamroga.ime.api.MiscUtils;
 import com.example.jamroga.ime.api.interfaces.PixelProcessor;
 import org.springframework.stereotype.Component;
 

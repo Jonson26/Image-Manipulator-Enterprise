@@ -1,6 +1,5 @@
-package com.example.jamroga.ime;
+package com.example.jamroga.ime.api;
 
-import com.example.jamroga.ime.api.Pixel;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.imageio.ImageIO;

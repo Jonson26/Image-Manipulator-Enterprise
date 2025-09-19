@@ -1,5 +1,6 @@
 package com.example.jamroga.ime;
 
+import com.example.jamroga.ime.api.MiscUtils;
 import com.example.jamroga.ime.api.OutputContainer;
 import com.example.jamroga.ime.api.ProcessorService;
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +88,7 @@ public class FrontendController {
         model.addAttribute("fileName", out.getFilename());
         model.addAttribute("finished", statusString(out.isFinished()));
         if(!out.isFinished()) model.addAttribute("script", PAGE_RELOAD_SCRIPT);
-        String base64img = "data:image/png;base64, "+MiscUtils.imgToBase64String(out.getImage());
+        String base64img = "data:image/png;base64, "+ MiscUtils.imgToBase64String(out.getImage());
         model.addAttribute("imageURI", base64img);
         model.addAttribute("newImageName", "blurred-"+changeExtension(out.getFilename()));
         return "output";

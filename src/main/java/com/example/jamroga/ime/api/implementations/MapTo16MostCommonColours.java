@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
-import com.example.jamroga.ime.MiscUtils;
+import com.example.jamroga.ime.api.MiscUtils;
 import com.example.jamroga.ime.api.Pixel;
 import org.springframework.stereotype.Component;
 
