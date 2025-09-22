@@ -1,6 +1,5 @@
 package com.example.jamroga.ime.api;
 
-import com.example.jamroga.ime.FrontendController;
 import com.example.jamroga.ime.api.implementations.BlurSimpleAverage;
 import com.example.jamroga.ime.api.implementations.ClassicProcessor;
 import com.example.jamroga.ime.api.interfaces.ImageProcessor;
@@ -32,7 +31,7 @@ public class ProcessorService {
         this.pixelProcessors = pixelProcessors;
         
         try {
-            URL url = FrontendController.class.getClassLoader().getResource("static/moka_mini.png");
+            URL url = ProcessorService.class.getClassLoader().getResource("static/moka_mini.png");
             assert url != null;
             BufferedImage img = ImageIO.read(url);
             OutputContainer out = new ClassicProcessor()
