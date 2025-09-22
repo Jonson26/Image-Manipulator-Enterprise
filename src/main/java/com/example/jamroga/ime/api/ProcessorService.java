@@ -79,6 +79,16 @@ public class ProcessorService {
         }
         return index;
     }
+    
+    public List<MenuElement> getProcessedImageListing(){
+        List<MenuElement> listing = new ArrayList<>();
+        for(int i=0; i<convertedImages.size(); i++){
+            OutputContainer img = convertedImages.get(i);
+            MenuElement me = new MenuElement(""+i, String.format("%s [%s]", img.getFilename(), img.getEffect()));
+            listing.add(me);
+        }
+        return listing;
+    }
 
     public OutputContainer getConvertedImage(int index) {
         if(index>=0 && index<convertedImages.size()) {

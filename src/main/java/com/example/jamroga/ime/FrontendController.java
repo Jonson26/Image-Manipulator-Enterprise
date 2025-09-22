@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -28,10 +27,8 @@ public class FrontendController {
         }, 1000);
         """;
     private final ProcessorService processorService;
-    
+
     private String tmpdir;
-    
-    private final List<String> uploadedFiles = new ArrayList<>();
     
     @Autowired
     public FrontendController(ProcessorService processorService) {
@@ -46,7 +43,12 @@ public class FrontendController {
 
     @GetMapping("/input")
     public String input(Model model) {
-        if(!uploadedFiles.isEmpty()) model.addAttribute("fileListing", uploadedFiles);
+        List<String> fileListing = processorService.getProcessedImageListing()
+            .stream()
+            .parallel()
+            .map(me -> String.format("%s <a href=\"/output?id=%s\">view</a>", me.description(), me.name()))
+            .toList();
+        if(!fileListing.isEmpty()) model.addAttribute("fileListing", fileListing);
         model.addAttribute("effects", processorService.getPixelProcessorMenuElements());
         model.addAttribute("options", processorService.getImageProcessorMenuElements());
         return "input";
@@ -66,7 +68,6 @@ public class FrontendController {
         Files.write(path, file.getBytes());
         String fileName = file.getOriginalFilename();
         log.atInfo().log("File upload successfully, uploaded file name: " + fileName);
-        uploadedFiles.add(fileName);
 
         int index = processorService.processImage(tmpdir, fileName, effect, options);
         

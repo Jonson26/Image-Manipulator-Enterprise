@@ -33,14 +33,11 @@
         </tr>
         <tr>
             <td colspan="2">
-                <p><b>Uploaded Files</b></p>
+                <p><b>Uploaded & Processed Files</b></p>
                 <ul th:each="item : ${fileListing}">
-                    <li th:text="${item}">Item description here...</li>
+                    <li th:utext="${item}" style="text-align: left">Item description here...</li>
                 </ul>
             </td>
-        </tr>
-        <tr>
-            <td colspan="2"><a href="/index.html">Home</a></td>
         </tr>
     </table>
 </body>

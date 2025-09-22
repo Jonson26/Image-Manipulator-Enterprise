@@ -16,7 +16,8 @@ public class ThreadedProcessor implements ImageProcessor {
     public OutputContainer processImage(BufferedImage image, PixelProcessor pixelProcessor, String filename) {
         OutputContainer output = new OutputContainer(
             new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB),
-            filename);
+            filename,
+            pixelProcessor.getDescription());
         log.atInfo().log(
             String.format("Processing %d by %d image with multithreading", image.getWidth(), image.getHeight()));
 

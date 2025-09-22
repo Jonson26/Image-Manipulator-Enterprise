@@ -15,7 +15,8 @@ public class ClassicProcessor implements ImageProcessor {
     public OutputContainer processImage(BufferedImage image, PixelProcessor pixelProcessor, String filename) {
         OutputContainer output = new OutputContainer(
             new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB),
-            filename);
+            filename,
+            pixelProcessor.getDescription());
 
         Thread t = new Thread(() -> {
             log.atInfo().log(
