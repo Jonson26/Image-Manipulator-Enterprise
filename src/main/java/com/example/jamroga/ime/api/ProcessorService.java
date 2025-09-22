@@ -6,6 +6,8 @@ import com.example.jamroga.ime.api.interfaces.ImageProcessor;
 import com.example.jamroga.ime.api.interfaces.PixelProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -18,6 +20,7 @@ import java.util.List;
 
 @Component
 @Slf4j
+@EnableScheduling
 public class ProcessorService {
     public static final String CONVERTING_FILE_MESSAGE = "Converting file %s [Effect is: %s, Option is: %s]";
     public static final String CONVERTED_FILE_TAG = "%s [%s]";
@@ -41,6 +44,7 @@ public class ProcessorService {
             BufferedImage img = ImageIO.read(url);
             OutputContainer out = new ClassicProcessor()
                 .processImage(img, new BlurSimpleAverage(), MOKA_FILENAME);
+            out.makePermanent();
             convertedImages.add(out);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -108,5 +112,16 @@ public class ProcessorService {
 
     private PixelProcessor findPixelProcessor(String name) {
         return pixelProcessors.stream().filter(pp -> pp.getName().equals(name)).findFirst().orElse(null);
+    }
+    
+    @Scheduled(fixedDelay = 5*60*1000)
+    private void removeExpiredImages() {
+        log.atInfo().log("Checking for expired images");
+        for(OutputContainer img : new ArrayList<>(convertedImages)) {
+            if(img.isExpired()){
+                log.atInfo().log(String.format("Removing "+CONVERTED_FILE_TAG, img.getFilename(), img.getEffect()));
+                convertedImages.remove(img);
+            }
+        }
     }
 }
