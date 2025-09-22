@@ -19,6 +19,11 @@ import java.util.List;
 @Component
 @Slf4j
 public class ProcessorService {
+    public static final String CONVERTING_FILE_MESSAGE = "Converting file %s [Effect is: %s, Option is: %s]";
+    public static final String CONVERTED_FILE_TAG = "%s [%s]";
+    public static final String MOKA_LOCATION = "static/moka_mini.png";
+    public static final String MOKA_FILENAME = "moka_mini.png";
+    
     private final List<ImageProcessor> imageProcessors;
     
     private final List<PixelProcessor> pixelProcessors;
@@ -31,11 +36,11 @@ public class ProcessorService {
         this.pixelProcessors = pixelProcessors;
         
         try {
-            URL url = ProcessorService.class.getClassLoader().getResource("static/moka_mini.png");
+            URL url = ProcessorService.class.getClassLoader().getResource(MOKA_LOCATION);
             assert url != null;
             BufferedImage img = ImageIO.read(url);
             OutputContainer out = new ClassicProcessor()
-                .processImage(img, new BlurSimpleAverage(), "moka_mini.png");
+                .processImage(img, new BlurSimpleAverage(), MOKA_FILENAME);
             convertedImages.add(out);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -58,9 +63,7 @@ public class ProcessorService {
         int index = 0;
         URL url = Path.of(dir+"/"+filename).toUri().toURL();
 
-        log.atInfo().log("Converting file "+url.getFile());
-        log.atInfo().log("Effect is: " + effect);
-        log.atInfo().log("Option is: " + options);
+        log.atInfo().log(String.format(CONVERTING_FILE_MESSAGE, url.getFile(), effect, options));
 
         try{
             BufferedImage img = ImageIO.read(url);
@@ -83,7 +86,9 @@ public class ProcessorService {
         List<MenuElement> listing = new ArrayList<>();
         for(int i=0; i<convertedImages.size(); i++){
             OutputContainer img = convertedImages.get(i);
-            MenuElement me = new MenuElement(""+i, String.format("%s [%s]", img.getFilename(), img.getEffect()));
+            MenuElement me = new MenuElement(
+                Integer.toString(i), 
+                String.format(CONVERTED_FILE_TAG, img.getFilename(), img.getEffect()));
             listing.add(me);
         }
         return listing;

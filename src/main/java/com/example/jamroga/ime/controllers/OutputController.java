@@ -18,6 +18,11 @@ public class OutputController {
             location.reload();
         }, 1000);
         """;
+    public static final String CIRCLE_GREEN = "\uD83D\uDFE2";
+    public static final String CIRCLE_RED = "\uD83D\uDD34";
+    public static final String OUTPUT_FORMAT = "png";
+    public static final String BASE64_IMAGE_HEADER = "data:image/%s;base64, %s";
+    
     private final ProcessorService processorService;
 
     @Autowired
@@ -31,10 +36,10 @@ public class OutputController {
         OutputContainer out = processorService.getConvertedImage(Integer.parseInt(index));
 
         model.addAttribute("fileName", out.getFilename());
-        model.addAttribute("finished", statusString(out.isFinished()));
+        model.addAttribute("finished", out.isFinished() ? CIRCLE_GREEN : CIRCLE_RED);
         if(!out.isFinished()) model.addAttribute("script", PAGE_RELOAD_SCRIPT);
-        String base64img = "data:image/png;base64, "+ MiscUtils.imgToBase64String(out.getImage());
-        model.addAttribute("imageURI", base64img);
+        model.addAttribute("imageURI", 
+            String.format(BASE64_IMAGE_HEADER, OUTPUT_FORMAT, MiscUtils.imgToBase64String(out.getImage())));
         model.addAttribute("newImageName", "blurred-"+changeExtension(out.getFilename()));
         return "output";
     }
@@ -42,14 +47,6 @@ public class OutputController {
     private static String changeExtension(String f) {
         int i = f.lastIndexOf('.');
         String name = f.substring(0,i);
-        return name + "png";
-    }
-
-    private static String statusString(boolean status){
-        if(status){
-            return "\uD83D\uDFE2";
-        }else{
-            return "\uD83D\uDD34";
-        }
+        return name + OUTPUT_FORMAT;
     }
 }
