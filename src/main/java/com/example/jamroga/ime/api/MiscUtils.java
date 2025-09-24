@@ -114,4 +114,26 @@ public class MiscUtils {
         g2.dispose();
         return resizedImg;
     }
+    
+    public static BufferedImage generateFallbackImage(){
+        BufferedImage out = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        
+        int curX = 0;
+        int curY = 0;
+        for (int rVal = 0; rVal < 16; rVal++){
+            for (int gVal = 0; gVal < 16; gVal++){
+                for (int bVal = 0; bVal < 16; bVal++){
+                    Color curColor = new Color(rVal*16, gVal*16, bVal*16);
+                    out.setRGB(curX, curY, curColor.getRGB());
+                    curX++;
+                    if (curX >= 64){
+                        curX = 0;
+                        curY++;
+                    }
+                }
+            }
+        }
+        
+        return out;
+    }
 }

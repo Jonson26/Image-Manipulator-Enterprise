@@ -48,6 +48,13 @@ public class ProcessorService {
             convertedImages.add(out);
         } catch (IOException e) {
             log.error(e.getMessage());
+            OutputContainer out = new OutputContainer(
+                MiscUtils.generateFallbackImage(), 
+                "fallback.png", 
+                "none");
+            out.finish();
+            out.makePermanent();
+            convertedImages.add(out);
         }
     }
     
@@ -65,7 +72,7 @@ public class ProcessorService {
 
     public int processImage(String dir, String filename, String effect, String options) throws IOException {
         int index = 0;
-        URL url = Path.of(dir+"/"+filename).toUri().toURL();
+        URL url = Path.of((dir.isEmpty()? "" : dir + "/") + filename).toUri().toURL();
 
         log.atInfo().log(String.format(CONVERTING_FILE_MESSAGE, url.getFile(), effect, options));
 
