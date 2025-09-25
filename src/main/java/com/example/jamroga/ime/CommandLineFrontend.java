@@ -15,7 +15,6 @@ import java.util.concurrent.Callable;
 @Component
 @Slf4j
 @CommandLine.Command(name = "ime",
-    version = "1.0",
     description = "Image Manipulator Enterprise")
 public class CommandLineFrontend implements Callable<Integer> {
     @Autowired

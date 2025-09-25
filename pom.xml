@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.example.Jamroga</groupId>
 	<artifactId>IME</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0</version>
 	<name>Image Manipulator Enterprise</name>
 	<description>Image Manipulator Enterprise</description>
 	<url/>
