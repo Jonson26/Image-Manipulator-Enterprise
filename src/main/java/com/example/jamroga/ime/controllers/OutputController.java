@@ -40,13 +40,12 @@ public class OutputController {
         if(!out.isFinished()) model.addAttribute("script", PAGE_RELOAD_SCRIPT);
         model.addAttribute("imageURI", 
             String.format(BASE64_IMAGE_HEADER, OUTPUT_FORMAT, MiscUtils.imgToBase64String(out.getImage())));
-        model.addAttribute("newImageName", "blurred-"+changeExtension(out.getFilename()));
+        model.addAttribute("newImageName", out.getEffect() + "-" + cutExtension(out.getFilename()));
         return "output";
     }
 
-    private static String changeExtension(String f) {
+    private static String cutExtension(String f) {
         int i = f.lastIndexOf('.');
-        String name = f.substring(0,i);
-        return name + OUTPUT_FORMAT;
+        return f.substring(0, i);
     }
 }
