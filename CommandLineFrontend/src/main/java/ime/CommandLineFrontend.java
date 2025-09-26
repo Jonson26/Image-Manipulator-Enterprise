@@ -1,17 +1,22 @@
-package com.example.jamroga.ime;
+package ime;
+
+import java.io.File;
+import java.util.concurrent.Callable;
+
+import javax.imageio.ImageIO;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 
 import com.example.jamroga.ime.api.MenuElement;
 import com.example.jamroga.ime.api.OutputContainer;
 import com.example.jamroga.ime.api.ProcessorService;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
-import javax.imageio.ImageIO;
-import java.io.File;
-import java.util.concurrent.Callable;
-
+@ComponentScan(basePackages = {"com.example.jamroga.ime.api"})
 @Component
 @Slf4j
 @CommandLine.Command(name = "ime",
@@ -49,11 +54,9 @@ public class CommandLineFrontend implements Callable<Integer> {
             for(MenuElement me : processorService.getImageProcessorMenuElements()){
                 System.out.printf("%s : %s %n", me.name(), me.description());
             }
-            System.exit(0);
         }
         if(help){
             CommandLine.usage(new CommandLineFrontend(), System.out);
-            System.exit(0);
         }
         if(file != null) {
             log.info("FILE : {}", file);
@@ -80,9 +83,9 @@ public class CommandLineFrontend implements Callable<Integer> {
             System.out.printf("Writing processed image to %s", output.getPath());
             
             ImageIO.write(out.getImage(), "png", output);
-            
-            System.exit(0);
         }
+
+        System.exit(0);
         return 0;
     }
 }

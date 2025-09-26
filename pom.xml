@@ -10,7 +10,8 @@
 	</parent>
 	<groupId>com.example.Jamroga</groupId>
 	<artifactId>IME</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
+	<packaging>pom</packaging>
 	<name>Image Manipulator Enterprise</name>
 	<description>Image Manipulator Enterprise</description>
 	<url/>
@@ -20,6 +21,11 @@
 	<developers>
 		<developer/>
 	</developers>
+	<modules>
+		<module>Backend</module>
+		<module>WebFrontend</module>
+		<module>CommandLineFrontend</module>
+	</modules>
 	<scm>
 		<connection/>
 		<developerConnection/>
@@ -80,6 +86,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<classifier>exec</classifier>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>

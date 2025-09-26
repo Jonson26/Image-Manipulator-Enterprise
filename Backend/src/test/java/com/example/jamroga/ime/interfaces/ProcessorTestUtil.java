@@ -1,4 +1,4 @@
-package com.example.jamroga.ime.api.interfaces;
+package com.example.jamroga.ime.interfaces;
 
 import lombok.extern.slf4j.Slf4j;
 
